@@ -73,14 +73,33 @@ public class AccuWeatherType {
                         .addPathSegment(PITER_KEY)
                         .addQueryParameter(API_KEY_QUERY_PARAM, API_KEY)
                         .addQueryParameter(LANGUAGE, "ru-ru")
+                        .addQueryParameter(METRIC, "true")
                         .build();
                 Request request_5d = new Request.Builder()
                         .url(httpUrl_5d)
                         .build();
                 Response oneDayForecastResponse_5d = okHttpClient.newCall(request_5d).execute();
-                String weatherResponse_5d;
-                weatherResponse_5d = Objects.requireNonNull(oneDayForecastResponse_5d.body()).string();
-                System.out.println(weatherResponse_5d);
+                String jsonResponse_5d;
+                jsonResponse_5d = Objects.requireNonNull(oneDayForecastResponse_5d.body()).string();
+                System.out.println(jsonResponse_5d);
+                ObjectMapper objectMapper2 = new ObjectMapper();
+                Root root2 = objectMapper2.readValue(jsonResponse_5d, Root.class);
+                for (DailyForecast i: root2.dailyForecasts){
+                    Date dateWeather = i.date;
+                    double minTemperature = i.temperature.minimum.value;
+                    String unitMin = i.temperature.minimum.unit;
+                    double maxTemperature = i.temperature.maximum.value;
+                    String unitMax = i.temperature.maximum.unit;
+                    String dayConditions = i.day.iconPhrase;
+                    String nightConditions = i.night.iconPhrase;
+                    System.out.println("Погода в Санкт-Петербурге на " + dateWeather +
+                            ":\n" + "Минимальная температура " + minTemperature + unitMin +
+                            "\n" + "Максимальная температура " + maxTemperature + unitMax +
+                            "\n" + "Днем - " + dayConditions +
+                            "\n" + "Ночью - " + nightConditions + "\n");
+                }
+
+
             }
         }
     }
