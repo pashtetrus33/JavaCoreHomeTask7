@@ -5,9 +5,10 @@ import okhttp3.Request;
 import okhttp3.Response;
 import java.io.IOException;
 import java.util.Date;
+import java.util.List;
 import java.util.Objects;
 
-public class AccuWeatherType {
+public class AccuweatherModel implements WeatherModel {
 
     private static final String PROTOKOL = "https";
     private static final String BASE_HOST = "dataservice.accuweather.com";
@@ -17,17 +18,21 @@ public class AccuWeatherType {
     private static final String ONE_DAY = "1day";
     private static final String FIVE_DAY = "5day";
     private static final String API_KEY = "GRX9qyKDjztP68qroYzrqnxoLACp6mfM";
-    private static final String PITER_KEY = "295212";
     private static final String API_KEY_QUERY_PARAM = "apikey";
     private static final String LANGUAGE = "language";
     private static final String METRIC = "metric";
+    private static final String LOCATIONS ="locations";
+    private static final String CITIES = "cities";
+    private static final String AUTOCOMPLETE = "autocomplete";
 
     private static final OkHttpClient okHttpClient = new OkHttpClient();
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
-    public void getWeather(String input) throws IOException {
-        switch (input) {
-            case "1" -> {
+
+
+    public void getWeather(String selectedCity, Period period) throws IOException {
+        switch (period) {
+            case NOW -> {
                 HttpUrl httpUrl = new HttpUrl.Builder()
                         .scheme(PROTOKOL)
                         .host(BASE_HOST)
@@ -35,7 +40,7 @@ public class AccuWeatherType {
                         .addPathSegment(VERSION)
                         .addPathSegment(DAILY)
                         .addPathSegment(ONE_DAY)
-                        .addPathSegment(PITER_KEY)
+                        .addPathSegment(detectCityKey(selectedCity))
                         .addQueryParameter(API_KEY_QUERY_PARAM, API_KEY)
                         .addQueryParameter(LANGUAGE, "ru-ru")
                         .addQueryParameter(METRIC, "true")
@@ -47,7 +52,6 @@ public class AccuWeatherType {
                 String jsonString;
                 jsonString = Objects.requireNonNull(oneDayForecastResponse.body()).string();
                 System.out.println(jsonString);
-                ObjectMapper objectMapper = new ObjectMapper();
                 Root root = objectMapper.readValue(jsonString, Root.class);
                 Date dateWeather = root.dailyForecasts.get(0).date;
                 double minTemperature = (root.dailyForecasts.get(0).temperature.minimum).value;
@@ -56,13 +60,13 @@ public class AccuWeatherType {
                 String unitMax = (root.dailyForecasts.get(0).temperature.maximum).unit;
                 String dayConditions = root.dailyForecasts.get(0).day.iconPhrase;
                 String nightConditions = root.dailyForecasts.get(0).night.iconPhrase;
-                System.out.println("Погода в Санкт-Петербурге на " + dateWeather +
+                System.out.println("Погода в " + selectedCity + " на 1 день: " + dateWeather +
                         ":\n" + "Минимальная температура " + minTemperature + unitMin +
                         "\n" + "Максимальная температура " + maxTemperature + unitMax +
                         "\n" + "Днем - " + dayConditions +
                         "\n" + "Ночью - " + nightConditions + "\n");
             }
-            case "5" -> {
+            case FIVE_DAYS -> {
                 HttpUrl httpUrl_5d = new HttpUrl.Builder()
                         .scheme(PROTOKOL)
                         .host(BASE_HOST)
@@ -70,7 +74,7 @@ public class AccuWeatherType {
                         .addPathSegment(VERSION)
                         .addPathSegment(DAILY)
                         .addPathSegment(FIVE_DAY)
-                        .addPathSegment(PITER_KEY)
+                        .addPathSegment(detectCityKey(selectedCity))
                         .addQueryParameter(API_KEY_QUERY_PARAM, API_KEY)
                         .addQueryParameter(LANGUAGE, "ru-ru")
                         .addQueryParameter(METRIC, "true")
@@ -82,8 +86,7 @@ public class AccuWeatherType {
                 String jsonResponse_5d;
                 jsonResponse_5d = Objects.requireNonNull(oneDayForecastResponse_5d.body()).string();
                 System.out.println(jsonResponse_5d);
-                ObjectMapper objectMapper2 = new ObjectMapper();
-                Root root2 = objectMapper2.readValue(jsonResponse_5d, Root.class);
+                Root root2 = objectMapper.readValue(jsonResponse_5d, Root.class);
                 for (DailyForecast i: root2.dailyForecasts){
                     Date dateWeather = i.date;
                     double minTemperature = i.temperature.minimum.value;
@@ -92,7 +95,7 @@ public class AccuWeatherType {
                     String unitMax = i.temperature.maximum.unit;
                     String dayConditions = i.day.iconPhrase;
                     String nightConditions = i.night.iconPhrase;
-                    System.out.println("Погода в Санкт-Петербурге на " + dateWeather +
+                    System.out.println("Погода в " + selectedCity +" на 5 дней: " + dateWeather +
                             ":\n" + "Минимальная температура " + minTemperature + unitMin +
                             "\n" + "Максимальная температура " + maxTemperature + unitMax +
                             "\n" + "Днем - " + dayConditions +
@@ -104,4 +107,34 @@ public class AccuWeatherType {
         }
     }
 
+
+   /* @Override
+    public List<Weather> getSavedToDBWeather() {
+        return null;
+    }*/
+
+    private String detectCityKey(String selectCity) throws IOException {
+        //http://dataservice.accuweather.com/locations/v1/cities/autocomplete
+        HttpUrl httpUrl = new HttpUrl.Builder()
+                .scheme(PROTOKOL)
+                .host(BASE_HOST)
+                .addPathSegment(LOCATIONS)
+                .addPathSegment(VERSION)
+                .addPathSegment(CITIES)
+                .addPathSegment(AUTOCOMPLETE)
+                .addQueryParameter(API_KEY_QUERY_PARAM, API_KEY)
+                .addQueryParameter("q", selectCity)
+                .build();
+
+        Request request = new Request.Builder()
+                .url(httpUrl)
+                .get()
+                .addHeader("accept", "application/json")
+                .build();
+
+        Response response = okHttpClient.newCall(request).execute();
+        String responseString = Objects.requireNonNull(response.body()).string();
+
+        return objectMapper.readTree(responseString).get(0).at("/Key").asText();
+    }
 }

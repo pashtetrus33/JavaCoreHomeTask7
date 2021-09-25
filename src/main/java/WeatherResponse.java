@@ -1,8 +1,8 @@
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Date;
 import java.util.List;
-
 class Headline{
     @JsonProperty("EffectiveDate")
     public Date effectiveDate;
@@ -56,14 +56,25 @@ class Day{
     public String iconPhrase;
     @JsonProperty("HasPrecipitation")
     public boolean hasPrecipitation;
+    @JsonProperty("PrecipitationType")
+    public String precepitationType;
+    @JsonProperty("PrecipitationIntensity")
+    public String precipitationIntensity;
+
+
+
 }
 class Night{
     @JsonProperty("Icon")
     public int icon;
     @JsonProperty("IconPhrase")
     public String iconPhrase;
-    @JsonProperty("HasPrecipitation")
-    public boolean hasPrecipitation;
+     @JsonProperty("HasPrecipitation")
+     public boolean hasPrecipitation;
+    @JsonProperty("PrecipitationType")
+    public String precepitationType;
+    @JsonProperty("PrecipitationIntensity")
+    public String precipitationIntensity;
 }
 class DailyForecast{
     @JsonProperty("Date")
