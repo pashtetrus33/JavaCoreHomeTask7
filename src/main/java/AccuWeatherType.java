@@ -95,8 +95,8 @@ public class AccuWeatherType {
                     System.out.println("Погода в Санкт-Петербурге на " + dateWeather +
                             ":\n" + "Минимальная температура " + minTemperature + unitMin +
                             "\n" + "Максимальная температура " + maxTemperature + unitMax +
-                            "\n" + "Днем - " + dayConditions +
-                            "\n" + "Ночью - " + nightConditions + "\n");
+                            "\n" + "Днем -- " + dayConditions +
+                            "\n" + "Ночью -- " + nightConditions + "\n");
                 }
 
 
