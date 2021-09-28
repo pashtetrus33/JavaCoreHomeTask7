@@ -1,4 +1,5 @@
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -13,15 +14,14 @@ import java.util.Map;
             variants.put(2, Period.DB);
         }
 
-        public void getWeather(String userInput, String selectedCity) throws IOException {
+        public void getWeather(String userInput, String selectedCity) throws IOException, SQLException {
             Integer userIntegerInput = Integer.parseInt(userInput);
 
             switch (variants.get(userIntegerInput)) {
                 case NOW -> weatherModel.getWeather(selectedCity, Period.NOW);
                 case FIVE_DAYS -> weatherModel.getWeather(selectedCity, Period.FIVE_DAYS);
 
-                // case DB:
-                //weatherModel.getSavedToDBWeather();
+                case DB -> weatherModel.getSavedToDBWeather(selectedCity);
             }
         }
     }

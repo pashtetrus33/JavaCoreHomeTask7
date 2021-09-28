@@ -1,4 +1,5 @@
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.Scanner;
 
 public class UserInterfaceView {
@@ -16,7 +17,7 @@ public class UserInterfaceView {
 
             String command = scanner.nextLine();
 
-            if((!(command.equals("1")))&&(!(command.equals("5")))&&(!(command.equals("0")))){
+            if((!(command.equals("1")))&&(!(command.equals("5")))&&(!(command.equals("2")))&&(!(command.equals("0")))){
                 System.out.println("Неверный номер команды!");
                 break;
             }
@@ -25,7 +26,7 @@ public class UserInterfaceView {
 
             try {
                 controller.getWeather(command, city);
-            } catch (IOException e) {
+            } catch (IOException | SQLException e) {
                 e.printStackTrace();
             }
         }

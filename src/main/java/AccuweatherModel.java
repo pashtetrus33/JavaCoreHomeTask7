@@ -1,9 +1,13 @@
+import entity.Weather;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import entity.Weather;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import java.io.IOException;
+import java.sql.*;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
@@ -30,7 +34,7 @@ public class AccuweatherModel implements WeatherModel {
 
 
 
-    public void getWeather(String selectedCity, Period period) throws IOException {
+    public void getWeather(String selectedCity, Period period) throws IOException, SQLException {
         switch (period) {
             case NOW -> {
                 HttpUrl httpUrl = new HttpUrl.Builder()
@@ -65,6 +69,10 @@ public class AccuweatherModel implements WeatherModel {
                         "\n" + "Максимальная температура " + maxTemperature + unitMax +
                         "\n" + "Днем - " + dayConditions +
                         "\n" + "Ночью - " + nightConditions + "\n");
+
+                Weather weather = new Weather(selectedCity,dateWeather.toString(),minTemperature, maxTemperature, dayConditions, nightConditions);
+                DataBaseRepository dataBaseRepository = new DataBaseRepository();
+                dataBaseRepository.saveWeatherToDataBase(weather);
             }
             case FIVE_DAYS -> {
                 HttpUrl httpUrl_5d = new HttpUrl.Builder()
@@ -100,6 +108,9 @@ public class AccuweatherModel implements WeatherModel {
                             "\n" + "Максимальная температура " + maxTemperature + unitMax +
                             "\n" + "Днем - " + dayConditions +
                             "\n" + "Ночью - " + nightConditions + "\n");
+                    Weather weather = new Weather(selectedCity,dateWeather.toString(),minTemperature, maxTemperature, dayConditions, nightConditions);
+                    DataBaseRepository dataBaseRepository = new DataBaseRepository();
+                    dataBaseRepository.saveWeatherToDataBase(weather);
                 }
 
 
@@ -108,10 +119,26 @@ public class AccuweatherModel implements WeatherModel {
     }
 
 
-   /* @Override
-    public List<Weather> getSavedToDBWeather() {
-        return null;
-    }*/
+   @Override
+    public void getSavedToDBWeather(String selectedCity) {
+       List<Weather> weathers = new ArrayList<>();
+       try (Connection connection = DriverManager.getConnection(DataBaseRepository.DB_PATH)) {
+           Statement statement = connection.createStatement();
+           String getWeather = "select * from weather where city = '"+ selectedCity + "'";
+           ResultSet resultSet = statement.executeQuery(getWeather);
+           while (resultSet.next()) {
+               weathers.add(new Weather(resultSet.getString("city"),
+                       resultSet.getString("localdate"),
+                       resultSet.getDouble("temperature_min"),
+                       resultSet.getDouble("temperature_max"),
+                       resultSet.getString("day_conditions"),
+                       resultSet.getString("night_conditions")));
+           }
+       } catch (SQLException throwables) {
+           throwables.printStackTrace();
+       }
+       System.out.println(weathers);
+    }
 
     private String detectCityKey(String selectCity) throws IOException {
         //http://dataservice.accuweather.com/locations/v1/cities/autocomplete
